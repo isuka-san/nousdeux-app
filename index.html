@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>NousDeux</title>
+  <title>Planio</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0d0d14" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="NousDeux" />
+  <meta name="apple-mobile-web-app-title" content="Planio" />
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -38,8 +38,8 @@
 const { useState, useCallback } = React;
 
 const USERS = {
-  isuka: { name: "Isuka", emoji: "🌸", color: "badge-isuka" },
-  lea:   { name: "Léa",   emoji: "💜", color: "badge-lea" }
+  isuka: { name: "Moi", emoji: "🔵", color: "badge-isuka" },
+  lea:   { name: "Toi",  emoji: "🟣", color: "badge-lea" }
 };
 
 const TABS = [
@@ -211,7 +211,7 @@ function FilmsTab({ data, setData, currentUser }) {
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter===val ? "gradient-bg text-white" : "filter-btn"}`}>{lbl}</button>
           ))}
         </div>
-        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
+        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mn-4 flex items-center justify-center gap-2">
           <span className="text-xl">+</span> Ajouter un film
         </button>
         {filtered.length === 0
@@ -263,7 +263,7 @@ function MusiqueTab({ data, setData, currentUser }) {
         <h2 className="text-white font-bold text-xl mb-1">Musique 🎵</h2>
         <p className="text-sm" style={{color:"rgba(255,255,255,0.75)"}}>{musiques.length} morceau{musiques.length>1?"x":""}</p>
       </div>
-      <div className="p-4">
+      <div className="p-4">
         <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
           <span className="text-xl">+</span> Ajouter un morceau
         </button>
@@ -293,7 +293,7 @@ function MusiqueTab({ data, setData, currentUser }) {
       </div>
       {modal && <AddModal title="Nouveau morceau 🎵" fields={[
         {key:"title", label:"Titre", placeholder:"Ex: Blinding Lights", required:true},
-        {key:"artist", label:"Artiste", placeholder:"Ex: The Weeknd"},
+       {key:"artist", label:"Artiste", placeholder:"Ex: The Weeknd"},
         {key:"mood", label:"Ambiance", placeholder:"Ex: Énergie 🔥, Chill 🌙..."},
       ]} onClose={() => setModal(false)} onSave={add} />}
     </div>
@@ -301,7 +301,7 @@ function MusiqueTab({ data, setData, currentUser }) {
 }
 
 function App() {
-  const [currentUser, setCurrentUser] = useStorage("nd_user", "isuka");
+  const [currentUser, setCurrentUser] = useStora>ge("nd_user", "isuka");
   const [activeTab, setActiveTab] = useState("activites");
   const [data, setData] = useStorage("nd_data", defaultData);
 
@@ -310,7 +310,7 @@ function App() {
       {/* Header */}
       <div className="gradient-bg px-4 pt-4 pb-2 flex items-center justify-between sticky top-0 z-50">
         <div>
-          <h1 className="text-white font-bold text-lg leading-tight">NousDeux</h1>
+          <h1 className="text-white font-bold text-lg leading-tight">Planio</h1>
           <p className="text-xs" style={{color:"rgba(255,255,255,0.7)"}}>Plans &amp; listes partagés</p>
         </div>
         <div className="flex rounded-full p-1 gap-1" style={{background:"rgba(0,0,0,0.2)"}}>
