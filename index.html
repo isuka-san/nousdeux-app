@@ -38,7 +38,7 @@
 const { useState, useCallback } = React;
 
 const USERS = {
-  isuka: { name: "Moi", emoji: "🔵", color: "badge-isuka" },
+  isuka: { name: "Moi", emoji: "🩵", color: "badge-isuka" },
   lea:   { name: "Toi",  emoji: "🟣", color: "badge-lea" }
 };
 
@@ -71,7 +71,7 @@ function useStorage(key, fallback) {
 
 function UserBadge({ userId }) {
   const u = USERS[userId];
-  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.color}`}>{u.emoji} {u.name}</span>;
+  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.color}`}>{u.emoji}</span>;
 }
 
 function EmptyState({ emoji, text }) {
@@ -367,7 +367,7 @@ function App() {
             <button key={id} onClick={() => setCurrentUser(id)}
               className="px-3 py-1 rounded-full text-sm font-medium transition-all"
               style={currentUser===id ? {background:"white", color:"#be185d"} : {color:"white"}}>
-              {u.emoji} {u.name}
+              {u.emoji}
             </button>
           ))}
         </div>
