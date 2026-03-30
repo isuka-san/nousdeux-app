@@ -231,9 +231,9 @@ function FilmsTab({ data, setData, currentUser }) {
         }
       </div>
       {modal && <AddModal title="Nouveau film 🎬" fields={[
-        {key:"title", label:"Titre du film", placeholder:"Ex: Interstellar", required:true},
-        {key:"genre", label:"Genre", placeholder:"Ex: Science-fiction, Comédie..."},
-        {key:"desc", label:"Note", placeholder:"Pourquoi le regarder ?", type:"textarea"},
+        {key:"title", label:"Titre du film", placeholder:"", required:true},
+        {key:"genre", label:"Genre", placeholder:""},
+        {key:"desc", label:"Note", placeholder:"", type:"textarea"},
       ]} onClose={() => setModal(false)} onSave={add} />}
     </div>
   );
@@ -284,9 +284,9 @@ function MusiqueTab({ data, setData, currentUser }) {
         }
       </div>
       {modal && <AddModal title="Nouveau morceau 🎵" fields={[
-        {key:"title", label:"Titre", placeholder:"Ex: Blinding Lights", required:true},
-        {key:"artist", label:"Artiste", placeholder:"Ex: The Weeknd"},
-        {key:"mood", label:"Ambiance", placeholder:"Ex: Énergie 🔥, Chill 🌙..."},
+        {key:"title", label:"Titre", placeholder:"", required:true},
+        {key:"artist", label:"Artiste", placeholder:""},
+        {key:"mood", label:"Ambiance", placeholder:""},
       ]} onClose={() => setModal(false)} onSave={add} />}
     </div>
   );
@@ -346,9 +346,9 @@ function JeuxTab({ data, setData, currentUser }) {
         }
       </div>
       {modal && <AddModal title="Nouveau jeu 🎮" fields={[
-        {key:"title", label:"Nom du jeu", placeholder:"Ex: Catan, Uno, Minecraft...", required:true},
-        {key:"type", label:"Type", placeholder:"Ex: Coopératif, Party game, Vidéo..."},
-        {key:"desc", label:"Note", placeholder:"Pourquoi y jouer ?", type:"textarea"},
+        {key:"title", label:"Nom du jeu", placeholder:"", required:true},
+        {key:"type", label:"Type", placeholder:""},
+        {key:"desc", label:"Note", placeholder:"", type:"textarea"},
       ]} onClose={() => setModal(false)} onSave={add} />}
     </div>
   );
