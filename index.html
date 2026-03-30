@@ -15,27 +15,40 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #f0eefa; }
-    .gradient-bg { background: linear-gradient(135deg, #f9a8d4 0%, #c084fc 100%); }
-    .card { background: #1a1527; border-radius: 16px; border: 1px solid #2a2242; }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #12101e; border-top: 1px solid #2a2242; padding: 8px 0 env(safe-area-inset-bottom); z-index: 100; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #f0eefa; transition: background 0.4s, color 0.4s; }
+    body.teal { background: #07100d; color: #e0faf5; }
+    .gradient-bg { background: linear-gradient(135deg, #f9a8d4 0%, #c084fc 100%); transition: background 0.4s; }
+    body.teal .gradient-bg { background: linear-gradient(135deg, #5eead4 0%, #34d399 100%); }
+    .card { background: #1a1527; border-radius: 16px; border: 1px solid #2a2242; transition: background 0.4s, border-color 0.4s; }
+    body.teal .card { background: #0b1e19; border-color: #153327; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #12101e; border-top: 1px solid #2a2242; padding: 8px 0 env(safe-area-inset-bottom); z-index: 100; transition: background 0.4s, border-color 0.4s; }
+    body.teal .bottom-nav { background: #081512; border-top-color: #153327; }
     .tab-btn { transition: all 0.2s; color: #6b5f8a; }
     .tab-btn.active { color: #f472b6; }
-    .badge-isuka { background: #3d1830; color: #fba8d0; }
-    .badge-lea { background: #2d1a40; color: #d8b4fe; }
-    input, textarea { outline: none; background: #221c35; border-color: #3a2f55 !important; color: #f0eefa; }
+    body.teal .tab-btn { color: #3d7a6a; }
+    body.teal .tab-btn.active { color: #2dd4bf; }
+    .badge-isuka { background: #3d1830; color: #fba8d0; transition: background 0.4s, color 0.4s; }
+    body.teal .badge-isuka { background: #0b2e26; color: #5eead4; }
+    .badge-lea { background: #2d1a40; color: #d8b4fe; transition: background 0.4s, color 0.4s; }
+    body.teal .badge-lea { background: #0b2e26; color: #a7f3d0; }
+    input, textarea { outline: none; background: #221c35; border-color: #3a2f55 !important; color: #f0eefa; transition: background 0.4s, border-color 0.4s, color 0.4s; }
+    body.teal input, body.teal textarea { background: #0b1e19 !important; border-color: #153327 !important; color: #e0faf5; }
     input::placeholder, textarea::placeholder { color: #6b5f8a; }
+    body.teal input::placeholder, body.teal textarea::placeholder { color: #3d7a6a; }
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; }
-    .modal-content { background: #1a1527; border-radius: 24px 24px 0 0; border-top: 1px solid #2a2242; width: 100%; max-height: 85vh; overflow-y: auto; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
-    .filter-btn { background: #221c35; color: #9791b0; border: 1px solid #2a2242; }
+    .modal-content { background: #1a1527; border-radius: 24px 24px 0 0; border-top: 1px solid #2a2242; width: 100%; max-height: 85vh; overflow-y: auto; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); transition: background 0.4s, border-color 0.4s; }
+    body.teal .modal-content { background: #0b1e19; border-top-color: #153327; }
+    .filter-btn { background: #221c35; color: #9791b0; border: 1px solid #2a2242; transition: background 0.4s, color 0.4s, border-color 0.4s; }
     .filter-btn.active { background: linear-gradient(135deg, #f9a8d4 0%, #c084fc 100%); color: white; border-color: transparent; }
+    body.teal .filter-btn { background: #0b1e19; color: #3d9e8a; border-color: #153327; }
+    body.teal .filter-btn.active { background: linear-gradient(135deg, #5eead4 0%, #34d399 100%); color: #07100d; border-color: transparent; }
     ::-webkit-scrollbar { display: none; }
   </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useCallback } = React;
+const { useState, useCallback, useEffect } = React;
 
 const USERS = {
   isuka: { name: "Moi", dot: null, emoji: "🦖", color: "badge-isuka" },
@@ -359,8 +372,14 @@ function App() {
   const [activeTab, setActiveTab] = useState("activites");
   const [data, setData] = useStorage("nd_data", defaultData);
 
+  useEffect(() => {
+    document.body.classList.toggle('teal', currentUser === 'isuka');
+  }, [currentUser]);
+
+  const activeColor = currentUser === 'isuka' ? '#0a5c4e' : '#be185d';
+
   return (
-    <div className="max-w-md mx-auto min-h-screen" style={{background:"#0d0d14"}}>
+    <div className="max-w-md mx-auto min-h-screen">
       {/* Header */}
       <div className="gradient-bg px-4 pt-4 pb-2 flex items-center justify-between sticky top-0 z-50">
         <div>
@@ -371,7 +390,7 @@ function App() {
           {Object.entries(USERS).map(([id, u]) => (
             <button key={id} onClick={() => setCurrentUser(id)}
               className="px-3 py-1 rounded-full text-sm font-medium transition-all"
-              style={currentUser===id ? {background:"white", color:"#be185d"} : {color:"white"}}>
+              style={currentUser===id ? {background:"white", color:activeColor} : {color:"white"}}>
               {u.emoji}
             </button>
           ))}
