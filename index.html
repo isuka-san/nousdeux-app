@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>NousDeux</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d0d14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NousDeux" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #f0eefa; }
+    .gradient-bg { background: linear-gradient(135deg, #f9a8d4 0%, #c084fc 100%); }
+    .card { background: #1a1527; border-radius: 16px; border: 1px solid #2a2242; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #12101e; border-top: 1px solid #2a2242; padding: 8px 0 env(safe-area-inset-bottom); z-index: 100; }
+    .tab-btn { transition: all 0.2s; color: #6b5f8a; }
+    .tab-btn.active { color: #f472b6; }
+    .badge-isuka { background: #3d1830; color: #fba8d0; }
+    .badge-lea { background: #2d1a40; color: #d8b4fe; }
+    input, textarea { outline: none; background: #221c35; border-color: #3a2f55 !important; color: #f0eefa; }
+    input::placeholder, textarea::placeholder { color: #6b5f8a; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; }
+    .modal-content { background: #1a1527; border-radius: 24px 24px 0 0; border-top: 1px solid #2a2242; width: 100%; max-height: 85vh; overflow-y: auto; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+    .filter-btn { background: #221c35; color: #9791b0; border: 1px solid #2a2242; }
+    .filter-btn.active { background: linear-gradient(135deg, #f9a8d4 0%, #c084fc 100%); color: white; border-color: transparent; }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+const USERS = {
+  isuka: { name: "Isuka", emoji: "🌸", color: "badge-isuka" },
+  lea:   { name: "Léa",   emoji: "💜", color: "badge-lea" }
+};
+
+const TABS = [
+  { id: "activites", label: "Activités", emoji: "🎯" },
+  { id: "voyages",   label: "Voyages",   emoji: "✈️" },
+  { id: "films",     label: "Films",     emoji: "🎬" },
+  { id: "musique",   label: "Musique",   emoji: "🎵" },
+];
+
+const defaultData = {
+  activites: [
+    { id: 1, title: "Pique-nique au parc", desc: "Avec plein de snacks 🧺", date: "2026-04-12", by: "lea", done: false },
+    { id: 2, title: "Cours de poterie", desc: "On va tout rater mais c'est le but", date: "2026-04-20", by: "isuka", done: false },
+  ],
+  voyages: [
+    { id: 1, title: "Weekend à Lyon", desc: "Traboules + bonne bouffe", date: "2026-05-01", by: "isuka", done: false },
+    { id: 2, title: "Lisbonne en été", desc: "Pasteis de nata obligatoires 🍮", date: "2026-07-15", by: "lea", done: false },
+  ],
+  films: [
+    { id: 1, title: "Past Lives", desc: "Paraît que c'est top", genre: "Drame", by: "lea", watched: false },
+    { id: 2, title: "Everything Everywhere All at Once", desc: "Déjà vu ? On recommence !", genre: "Sci-fi", by: "isuka", watched: true },
+    { id: 3, title: "Le Fabuleux Destin d'Amélie Poulain", desc: "Classique incontournable", genre: "Comédie", by: "lea", watched: false },
+  ],
+  musique: [
+    { id: 1, title: "Blinding Lights", artist: "The Weeknd", mood: "Énergie 🔥", by: "isuka", liked: true },
+    { id: 2, title: "Clair de lune", artist: "Debussy", mood: "Chill 🌙", by: "lea", liked: true },
+    { id: 3, title: "Flowers", artist: "Miley Cyrus", mood: "Good vibes ✨", by: "lea", liked: false },
+  ],
+};
+
+function useStorage(key, fallback) {
+  const [val, setVal] = useState(() => {
+    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; }
+    catch { return fallback; }
+  });
+  const save = useCallback(v => {
+    setVal(v);
+    try { localStorage.setItem(key, JSON.stringify(v)); } catch {}
+  }, [key]);
+  return [val, save];
+}
+
+function UserBadge({ userId }) {
+  const u = USERS[userId];
+  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.color}`}>{u.emoji} {u.name}</span>;
+}
+
+function EmptyState({ emoji, text }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16" style={{color:"#6b5f8a"}}>
+      <div className="text-5xl mb-3">{emoji}</div>
+      <p className="text-sm">{text}</p>
+    </div>
+  );
+}
+
+function AddModal({ title, fields, onClose, onSave }) {
+  const [form, setForm] = useState({});
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-bold text-lg" style={{color:"#f0eefa"}}>{title}</h3>
+          <button onClick={onClose} className="text-2xl leading-none" style={{color:"#6b5f8a"}}>×</button>
+        </div>
+        {fields.map(f => (
+          <div key={f.key} className="mb-4">
+            <label className="text-sm font-medium mb-1 block" style={{color:"#9791b0"}}>{f.label}</label>
+            {f.type === "textarea"
+              ? <textarea className="w-full border rounded-xl p-3 text-sm resize-none h-20" placeholder={f.placeholder} value={form[f.key] || ""} onChange={e => setForm({...form, [f.key]: e.target.value})} />
+              : <input type={f.type || "text"} className="w-full border rounded-xl p-3 text-sm" placeholder={f.placeholder} value={form[f.key] || ""} onChange={e => setForm({...form, [f.key]: e.target.value})} />
+            }
+          </div>
+        ))}
+        <button
+          onClick={() => { if (fields.find(f => f.required && !form[f.key])) return; onSave(form); onClose(); }}
+          className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mt-2"
+        >Ajouter</button>
+      </div>
+    </div>
+  );
+}
+
+function ActivitesTab({ data, setData, currentUser }) {
+  const [sub, setSub] = useState("activites");
+  const [modal, setModal] = useState(false);
+  const items = data[sub];
+
+  const add = (form) => {
+    const newItem = { id: Date.now(), title: form.title, desc: form.desc || "", date: form.date || "", by: currentUser, done: false };
+    setData({ ...data, [sub]: [newItem, ...items] });
+  };
+  const toggle = (id) => setData({ ...data, [sub]: items.map(i => i.id === id ? {...i, done: !i.done} : i) });
+  const del = (id) => setData({ ...data, [sub]: items.filter(i => i.id !== id) });
+
+  return (
+    <div className="pb-24">
+      <div className="gradient-bg p-6 pb-4">
+        <h2 className="text-white font-bold text-xl mb-4">Plans</h2>
+        <div className="flex rounded-xl p-1 gap-1" style={{background:"rgba(0,0,0,0.2)"}}>
+          {["activites","voyages"].map(t => (
+            <button key={t} onClick={() => setSub(t)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all`}
+              style={sub===t ? {background:"white", color:"#be185d"} : {color:"white"}}>
+              {t === "activites" ? "🎯 Activités" : "✈️ Voyages"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="p-4">
+        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
+          <span className="text-xl">+</span> Ajouter {sub === "activites" ? "une activité" : "un voyage"}
+        </button>
+        {items.length === 0
+          ? <EmptyState emoji={sub === "activites" ? "🎯" : "✈️"} text="Rien encore — lancez-vous !" />
+          : items.map(item => (
+            <div key={item.id} className={`card p-4 mb-3`} style={item.done ? {opacity:0.45} : {}}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className={`font-semibold ${item.done ? "line-through" : ""}`} style={{color: item.done ? "#6b5f8a" : "#f0eefa"}}>{item.title}</span>
+                    <UserBadge userId={item.by} />
+                  </div>
+                  {item.desc && <p className="text-sm mb-1" style={{color:"#9791b0"}}>{item.desc}</p>}
+                  {item.date && <p className="text-xs" style={{color:"#f9a8d4"}}>📅 {new Date(item.date).toLocaleDateString("fr-FR", {day:"numeric",month:"long",year:"numeric"})}</p>}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => toggle(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                    style={item.done ? {background:"#1a3a2a", color:"#4ade80"} : {background:"#221c35", color:"#6b5f8a"}}>{item.done ? "✓" : "○"}</button>
+                  <button onClick={() => del(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
+                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      {modal && <AddModal title={sub === "activites" ? "Nouvelle activité 🎯" : "Nouveau voyage ✈️"} fields={[
+        {key:"title", label:"Titre", placeholder: sub==="activites"?"Ex: Randonnée en forêt":"Ex: Road trip Bretagne", required:true},
+        {key:"desc", label:"Description", placeholder:"Petite description...", type:"textarea"},
+        {key:"date", label:"Date prévue", type:"date"},
+      ]} onClose={() => setModal(false)} onSave={add} />}
+    </div>
+  );
+}
+
+function FilmsTab({ data, setData, currentUser }) {
+  const [modal, setModal] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const films = data.films;
+
+  const add = (form) => {
+    setData({ ...data, films: [{ id: Date.now(), title: form.title, desc: form.desc || "", genre: form.genre || "", by: currentUser, watched: false }, ...films] });
+  };
+  const toggleWatch = (id) => setData({ ...data, films: films.map(f => f.id === id ? {...f, watched: !f.watched} : f) });
+  const del = (id) => setData({ ...data, films: films.filter(f => f.id !== id) });
+
+  const filtered = filter === "all" ? films : filter === "watched" ? films.filter(f => f.watched) : films.filter(f => !f.watched);
+
+  return (
+    <div className="pb-24">
+      <div className="gradient-bg p-6">
+        <h2 className="text-white font-bold text-xl mb-1">Films 🎬</h2>
+        <p className="text-sm" style={{color:"rgba(255,255,255,0.75)"}}>{films.filter(f=>!f.watched).length} film{films.filter(f=>!f.watched).length>1?"s":""} à voir</p>
+      </div>
+      <div className="p-4">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+          {[["all","Tous"],["unwatched","À voir"],["watched","Vus ✓"]].map(([val,lbl]) => (
+            <button key={val} onClick={() => setFilter(val)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter===val ? "gradient-bg text-white" : "filter-btn"}`}>{lbl}</button>
+          ))}
+        </div>
+        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
+          <span className="text-xl">+</span> Ajouter un film
+        </button>
+        {filtered.length === 0
+          ? <EmptyState emoji="🎬" text="Aucun film ici !" />
+          : filtered.map(film => (
+            <div key={film.id} className="card p-4 mb-3" style={film.watched ? {opacity:0.5} : {}}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className={`font-semibold ${film.watched ? "line-through" : ""}`} style={{color: film.watched ? "#6b5f8a" : "#f0eefa"}}>{film.title}</span>
+                    <UserBadge userId={film.by} />
+                  </div>
+                  {film.genre && <span className="inline-block text-xs px-2 py-0.5 rounded-full mb-1" style={{background:"#2d1a40", color:"#d8b4fe"}}>{film.genre}</span>}
+                  {film.desc && <p className="text-sm" style={{color:"#9791b0"}}>{film.desc}</p>}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => toggleWatch(film.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                    style={film.watched ? {background:"#1a3a2a", color:"#4ade80"} : {background:"#221c35", color:"#6b5f8a"}}>{film.watched ? "✓" : "○"}</button>
+                  <button onClick={() => del(film.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
+                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      {modal && <AddModal title="Nouveau film 🎬" fields={[
+        {key:"title", label:"Titre du film", placeholder:"Ex: Interstellar", required:true},
+        {key:"genre", label:"Genre", placeholder:"Ex: Science-fiction, Comédie..."},
+        {key:"desc", label:"Note", placeholder:"Pourquoi le regarder ?", type:"textarea"},
+      ]} onClose={() => setModal(false)} onSave={add} />}
+    </div>
+  );
+}
+
+function MusiqueTab({ data, setData, currentUser }) {
+  const [modal, setModal] = useState(false);
+  const musiques = data.musique;
+
+  const add = (form) => {
+    setData({ ...data, musique: [{ id: Date.now(), title: form.title, artist: form.artist || "", mood: form.mood || "", by: currentUser, liked: false }, ...musiques] });
+  };
+  const toggleLike = (id) => setData({ ...data, musique: musiques.map(m => m.id === id ? {...m, liked: !m.liked} : m) });
+  const del = (id) => setData({ ...data, musique: musiques.filter(m => m.id !== id) });
+
+  return (
+    <div className="pb-24">
+      <div className="gradient-bg p-6">
+        <h2 className="text-white font-bold text-xl mb-1">Musique 🎵</h2>
+        <p className="text-sm" style={{color:"rgba(255,255,255,0.75)"}}>{musiques.length} morceau{musiques.length>1?"x":""}</p>
+      </div>
+      <div className="p-4">
+        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
+          <span className="text-xl">+</span> Ajouter un morceau
+        </button>
+        {musiques.length === 0
+          ? <EmptyState emoji="🎵" text="La liste est vide !" />
+          : musiques.map(m => (
+            <div key={m.id} className="card p-4 mb-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="font-semibold" style={{color:"#f0eefa"}}>{m.title}</span>
+                    <UserBadge userId={m.by} />
+                  </div>
+                  {m.artist && <p className="text-sm" style={{color:"#9791b0"}}>🎤 {m.artist}</p>}
+                  {m.mood && <p className="text-xs mt-1" style={{color:"#c084fc"}}>{m.mood}</p>}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => toggleLike(m.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-base"
+                    style={m.liked ? {background:"#3d1830"} : {background:"#221c35"}}>{m.liked ? "❤️" : "🤍"}</button>
+                  <button onClick={() => del(m.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
+                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      {modal && <AddModal title="Nouveau morceau 🎵" fields={[
+        {key:"title", label:"Titre", placeholder:"Ex: Blinding Lights", required:true},
+        {key:"artist", label:"Artiste", placeholder:"Ex: The Weeknd"},
+        {key:"mood", label:"Ambiance", placeholder:"Ex: Énergie 🔥, Chill 🌙..."},
+      ]} onClose={() => setModal(false)} onSave={add} />}
+    </div>
+  );
+}
+
+function App() {
+  const [currentUser, setCurrentUser] = useStorage("nd_user", "isuka");
+  const [activeTab, setActiveTab] = useState("activites");
+  const [data, setData] = useStorage("nd_data", defaultData);
+
+  return (
+    <div className="max-w-md mx-auto min-h-screen" style={{background:"#0d0d14"}}>
+      {/* Header */}
+      <div className="gradient-bg px-4 pt-4 pb-2 flex items-center justify-between sticky top-0 z-50">
+        <div>
+          <h1 className="text-white font-bold text-lg leading-tight">NousDeux</h1>
+          <p className="text-xs" style={{color:"rgba(255,255,255,0.7)"}}>Plans &amp; listes partagés</p>
+        </div>
+        <div className="flex rounded-full p-1 gap-1" style={{background:"rgba(0,0,0,0.2)"}}>
+          {Object.entries(USERS).map(([id, u]) => (
+            <button key={id} onClick={() => setCurrentUser(id)}
+              className="px-3 py-1 rounded-full text-sm font-medium transition-all"
+              style={currentUser===id ? {background:"white", color:"#be185d"} : {color:"white"}}>
+              {u.emoji} {u.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div>
+        {activeTab === "activites" && <ActivitesTab data={data} setData={setData} currentUser={currentUser} />}
+        {activeTab === "voyages" && <ActivitesTab data={data} setData={setData} currentUser={currentUser} />}
+        {activeTab === "films" && <FilmsTab data={data} setData={setData} currentUser={currentUser} />}
+        {activeTab === "musique" && <MusiqueTab data={data} setData={setData} currentUser={currentUser} />}
+      </div>
+
+      {/* Bottom Nav */}
+      <div className="bottom-nav">
+        <div className="flex">
+          {TABS.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 flex flex-col items-center py-2 tab-btn ${activeTab===tab.id ? "active" : ""}`}>
+              <span className="text-xl">{tab.emoji}</span>
+              <span className="text-xs mt-0.5 font-medium">{tab.label}</span>
+              {activeTab === tab.id && <span className="w-1 h-1 rounded-full mt-0.5" style={{background:"#f472b6"}}></span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
