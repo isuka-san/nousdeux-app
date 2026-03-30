@@ -1,5 +1,11 @@
-const CACHE = 'nousdeux-v1';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
+const CACHE = 'planio-v2';
+const ASSETS = [
+  '/planio-app/',
+  '/planio-app/index.html',
+  '/planio-app/manifest.json',
+  '/planio-app/icon-192.png',
+  '/planio-app/icon-512.png'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
