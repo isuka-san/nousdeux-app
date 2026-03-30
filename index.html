@@ -50,24 +50,10 @@ const TABS = [
 ];
 
 const defaultData = {
-  activites: [
-    { id: 1, title: "Pique-nique au parc", desc: "Avec plein de snacks 🧺", date: "2026-04-12", by: "lea", done: false },
-    { id: 2, title: "Cours de poterie", desc: "On va tout rater mais c'est le but", date: "2026-04-20", by: "isuka", done: false },
-  ],
-  voyages: [
-    { id: 1, title: "Weekend à Lyon", desc: "Traboules + bonne bouffe", date: "2026-05-01", by: "isuka", done: false },
-    { id: 2, title: "Lisbonne en été", desc: "Pasteis de nata obligatoires 🍮", date: "2026-07-15", by: "lea", done: false },
-  ],
-  films: [
-    { id: 1, title: "Past Lives", desc: "Paraît que c'est top", genre: "Drame", by: "lea", watched: false },
-    { id: 2, title: "Everything Everywhere All at Once", desc: "Déjà vu ? On recommence !", genre: "Sci-fi", by: "isuka", watched: true },
-    { id: 3, title: "Le Fabuleux Destin d'Amélie Poulain", desc: "Classique incontournable", genre: "Comédie", by: "lea", watched: false },
-  ],
-  musique: [
-    { id: 1, title: "Blinding Lights", artist: "The Weeknd", mood: "Énergie 🔥", by: "isuka", liked: true },
-    { id: 2, title: "Clair de lune", artist: "Debussy", mood: "Chill 🌙", by: "lea", liked: true },
-    { id: 3, title: "Flowers", artist: "Miley Cyrus", mood: "Good vibes ✨", by: "lea", liked: false },
-  ],
+  activites: [],
+  voyages: [],
+  films: [],
+  musique: [],
 };
 
 function useStorage(key, fallback) {
