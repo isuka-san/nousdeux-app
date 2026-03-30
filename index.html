@@ -164,7 +164,7 @@ function ActivitesTab({ data, setData, currentUser }) {
         }
       </div>
       {modal && <AddModal title={sub === "activites" ? "Nouvelle activité 🎯" : "Nouveau voyage ✈️"} fields={[
-        {key:"title", label:"Titre", placeholder: sub==="activites"?"Ex: Randonnée en forêt":"Ex: Road trip Bretagne", required:true},
+        {key:"title", label:"Titre", placeholder:"", required:true},
         {key:"desc", label:"Description", placeholder:"Petite description...", type:"textarea"},
         {key:"date", label:"Date prévue", type:"date"},
       ]} onClose={() => setModal(false)} onSave={add} />}
