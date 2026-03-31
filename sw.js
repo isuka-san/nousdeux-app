@@ -1,4 +1,4 @@
-const CACHE = 'planio-v2';
+const CACHE = 'planio-v3';
 const ASSETS = [
   '/planio-app/',
   '/planio-app/index.html',
