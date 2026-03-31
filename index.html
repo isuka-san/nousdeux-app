@@ -11,8 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="Planio" />
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #f0eefa; transition: background 0.4s, color 0.4s; }
@@ -47,434 +46,871 @@
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-const { useState, useCallback, useEffect } = React;
-
+<script>
+const {
+  useState,
+  useCallback,
+  useEffect
+} = React;
 const USERS = {
-  isuka: { name: "Moi", dot: null, emoji: "🦖", color: "badge-isuka" },
-  lea:   { name: "Toi",  dot: null, emoji: "🟣", color: "badge-lea" }
+  isuka: {
+    name: "Moi",
+    dot: null,
+    emoji: "🦖",
+    color: "badge-isuka"
+  },
+  lea: {
+    name: "Toi",
+    dot: null,
+    emoji: "🟣",
+    color: "badge-lea"
+  }
 };
-
-const TABS = [
-  { id: "activites", label: "Activités", emoji: "🎯" },
-  { id: "idees",     label: "Idées",     emoji: "⭐" },
-  { id: "films",     label: "Films",     emoji: "🎬" },
-  { id: "musique",   label: "Musique",   emoji: "🎵" },
-  { id: "jeux",      label: "Jeux",      emoji: "🎮" },
-];
-
+const TABS = [{
+  id: "activites",
+  label: "Activités",
+  emoji: "🎯"
+}, {
+  id: "idees",
+  label: "Idées",
+  emoji: "⭐"
+}, {
+  id: "films",
+  label: "Films",
+  emoji: "🎬"
+}, {
+  id: "musique",
+  label: "Musique",
+  emoji: "🎵"
+}, {
+  id: "jeux",
+  label: "Jeux",
+  emoji: "🎮"
+}];
 const defaultData = {
   activites: [],
   voyages: [],
   films: [],
   musique: [],
   jeux: [],
-  idees: [],
+  idees: []
 };
-
 function useStorage(key, fallback) {
   const [val, setVal] = useState(() => {
-    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; }
-    catch { return fallback; }
+    try {
+      const s = localStorage.getItem(key);
+      return s ? JSON.parse(s) : fallback;
+    } catch {
+      return fallback;
+    }
   });
   const save = useCallback(v => {
     setVal(v);
-    try { localStorage.setItem(key, JSON.stringify(v)); } catch {}
+    try {
+      localStorage.setItem(key, JSON.stringify(v));
+    } catch {}
   }, [key]);
   return [val, save];
 }
-
-function Dot({ u }) {
-  return u.dot
-    ? <span style={{display:'inline-block',width:'10px',height:'10px',borderRadius:'50%',background:u.dot,flexShrink:0}}></span>
-    : <span><Dot u={u} /></span>;
+function Dot({
+  u
+}) {
+  return u.dot ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: 'inline-block',
+      width: '10px',
+      height: '10px',
+      borderRadius: '50%',
+      background: u.dot,
+      flexShrink: 0
+    }
+  }) : /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(Dot, {
+    u: u
+  }));
 }
-function UserBadge({ userId }) {
+function UserBadge({
+  userId
+}) {
   const u = USERS[userId];
-  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.color}`}><Dot u={u} /></span>;
+  return /*#__PURE__*/React.createElement("span", {
+    className: `text-xs font-semibold px-2 py-0.5 rounded-full ${u.color}`
+  }, /*#__PURE__*/React.createElement(Dot, {
+    u: u
+  }));
 }
-
-function EmptyState({ emoji, text }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16" style={{color:"#6b5f8a"}}>
-      <div className="text-5xl mb-3">{emoji}</div>
-      <p className="text-sm">{text}</p>
-    </div>
-  );
+function EmptyState({
+  emoji,
+  text
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center justify-center py-16",
+    style: {
+      color: "#6b5f8a"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-5xl mb-3"
+  }, emoji), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm"
+  }, text));
 }
-
-function AddModal({ title, fields, onClose, onSave }) {
+function AddModal({
+  title,
+  fields,
+  onClose,
+  onSave
+}) {
   const [form, setForm] = useState({});
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-lg" style={{color:"#f0eefa"}}>{title}</h3>
-          <button onClick={onClose} className="text-2xl leading-none" style={{color:"#6b5f8a"}}>×</button>
-        </div>
-        {fields.map(f => (
-          <div key={f.key} className="mb-4">
-            <label className="text-sm font-medium mb-1 block" style={{color:"#9791b0"}}>{f.label}</label>
-            {f.type === "textarea"
-              ? <textarea className="w-full border rounded-xl p-3 text-sm resize-none h-20" placeholder={f.placeholder} value={form[f.key] || ""} onChange={e => setForm({...form, [f.key]: e.target.value})} />
-              : <input type={f.type || "text"} className="w-full border rounded-xl p-3 text-sm" placeholder={f.placeholder} value={form[f.key] || ""} onChange={e => setForm({...form, [f.key]: e.target.value})} />
-            }
-          </div>
-        ))}
-        <button
-          onClick={() => { if (fields.find(f => f.required && !form[f.key])) return; onSave(form); onClose(); }}
-          className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mt-2"
-        >Ajouter</button>
-      </div>
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "modal-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "modal-content",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-5"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold text-lg",
+    style: {
+      color: "#f0eefa"
+    }
+  }, title), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    className: "text-2xl leading-none",
+    style: {
+      color: "#6b5f8a"
+    }
+  }, "\xD7")), fields.map(f => /*#__PURE__*/React.createElement("div", {
+    key: f.key,
+    className: "mb-4"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "text-sm font-medium mb-1 block",
+    style: {
+      color: "#9791b0"
+    }
+  }, f.label), f.type === "textarea" ? /*#__PURE__*/React.createElement("textarea", {
+    className: "w-full border rounded-xl p-3 text-sm resize-none h-20",
+    placeholder: f.placeholder,
+    value: form[f.key] || "",
+    onChange: e => setForm({
+      ...form,
+      [f.key]: e.target.value
+    })
+  }) : /*#__PURE__*/React.createElement("input", {
+    type: f.type || "text",
+    className: "w-full border rounded-xl p-3 text-sm",
+    placeholder: f.placeholder,
+    value: form[f.key] || "",
+    onChange: e => setForm({
+      ...form,
+      [f.key]: e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      if (fields.find(f => f.required && !form[f.key])) return;
+      onSave(form);
+      onClose();
+    },
+    className: "w-full gradient-bg text-white font-semibold py-3 rounded-xl mt-2"
+  }, "Ajouter")));
 }
-
-function ActivitesTab({ data, setData, currentUser }) {
+function ActivitesTab({
+  data,
+  setData,
+  currentUser
+}) {
   const [sub, setSub] = useState("activites");
   const [modal, setModal] = useState(false);
   const items = data[sub];
-
-  const add = (form) => {
-    const newItem = { id: Date.now(), title: form.title, desc: form.desc || "", date: form.date || "", by: currentUser, done: false };
-    setData({ ...data, [sub]: [newItem, ...items] });
+  const add = form => {
+    const newItem = {
+      id: Date.now(),
+      title: form.title,
+      desc: form.desc || "",
+      date: form.date || "",
+      by: currentUser,
+      done: false
+    };
+    setData({
+      ...data,
+      [sub]: [newItem, ...items]
+    });
   };
-  const toggle = (id) => setData({ ...data, [sub]: items.map(i => i.id === id ? {...i, done: !i.done} : i) });
-  const del = (id) => setData({ ...data, [sub]: items.filter(i => i.id !== id) });
-
-  return (
-    <div className="pb-24">
-      <div className="gradient-bg p-6 pb-4">
-        <h2 className="text-white font-bold text-xl mb-4">Plans</h2>
-        <div className="flex rounded-xl p-1 gap-1" style={{background:"rgba(0,0,0,0.2)"}}>
-          {["activites","voyages"].map(t => (
-            <button key={t} onClick={() => setSub(t)} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all`}
-              style={sub===t ? {background:"white", color:"#be185d"} : {color:"white"}}>
-              {t === "activites" ? "🎯 Activités" : "✈️ Voyages"}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="p-4">
-        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
-          <span className="text-xl">+</span> Ajouter {sub === "activites" ? "une activité" : "un voyage"}
-        </button>
-        {items.length === 0
-          ? <EmptyState emoji={sub === "activites" ? "🎯" : "✈️"} text={sub === "activites" ? "pas d'activité" : "pas de voyage"} />
-          : items.map(item => (
-            <div key={item.id} className={`card p-4 mb-3`} style={item.done ? {opacity:0.45} : {}}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`font-semibold ${item.done ? "line-through" : ""}`} style={{color: item.done ? "#6b5f8a" : "#f0eefa"}}>{item.title}</span>
-                    <UserBadge userId={item.by} />
-                  </div>
-                  {item.desc && <p className="text-sm mb-1" style={{color:"#9791b0"}}>{item.desc}</p>}
-                  {item.date && <p className="text-xs" style={{color:"#f9a8d4"}}>📅 {new Date(item.date).toLocaleDateString("fr-FR", {day:"numeric",month:"long",year:"numeric"})}</p>}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <button onClick={() => toggle(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                    style={item.done ? {background:"#1a3a2a", color:"#4ade80"} : {background:"#221c35", color:"#6b5f8a"}}>{item.done ? "✓" : "○"}</button>
-                  <button onClick={() => del(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
-                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
-                </div>
-              </div>
-            </div>
-          ))
-        }
-      </div>
-      {modal && <AddModal title={sub === "activites" ? "Nouvelle activité 🎯" : "Nouveau voyage ✈️"} fields={[
-        {key:"title", label:"Titre", placeholder:"", required:true},
-        {key:"desc", label:"Description", placeholder:"", type:"textarea"},
-        {key:"date", label:"Date prévue", type:"date"},
-      ]} onClose={() => setModal(false)} onSave={add} />}
-    </div>
-  );
+  const toggle = id => setData({
+    ...data,
+    [sub]: items.map(i => i.id === id ? {
+      ...i,
+      done: !i.done
+    } : i)
+  });
+  const del = id => setData({
+    ...data,
+    [sub]: items.filter(i => i.id !== id)
+  });
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pb-24"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "gradient-bg p-6 pb-4"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-white font-bold text-xl mb-4"
+  }, "Plans"), /*#__PURE__*/React.createElement("div", {
+    className: "flex rounded-xl p-1 gap-1",
+    style: {
+      background: "rgba(0,0,0,0.2)"
+    }
+  }, ["activites", "voyages"].map(t => /*#__PURE__*/React.createElement("button", {
+    key: t,
+    onClick: () => setSub(t),
+    className: `flex-1 py-2 rounded-lg text-sm font-medium transition-all`,
+    style: sub === t ? {
+      background: "white",
+      color: "#be185d"
+    } : {
+      color: "white"
+    }
+  }, t === "activites" ? "🎯 Activités" : "✈️ Voyages")))), /*#__PURE__*/React.createElement("div", {
+    className: "p-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal(true),
+    className: "w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, "+"), " Ajouter ", sub === "activites" ? "une activité" : "un voyage"), items.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+    emoji: sub === "activites" ? "🎯" : "✈️",
+    text: sub === "activites" ? "pas d'activité" : "pas de voyage"
+  }) : items.map(item => /*#__PURE__*/React.createElement("div", {
+    key: item.id,
+    className: `card p-4 mb-3`,
+    style: item.done ? {
+      opacity: 0.45
+    } : {}
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 mb-1 flex-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `font-semibold ${item.done ? "line-through" : ""}`,
+    style: {
+      color: item.done ? "#6b5f8a" : "#f0eefa"
+    }
+  }, item.title), /*#__PURE__*/React.createElement(UserBadge, {
+    userId: item.by
+  })), item.desc && /*#__PURE__*/React.createElement("p", {
+    className: "text-sm mb-1",
+    style: {
+      color: "#9791b0"
+    }
+  }, item.desc), item.date && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs",
+    style: {
+      color: "#f9a8d4"
+    }
+  }, "\uD83D\uDCC5 ", new Date(item.date).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col gap-1"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => toggle(item.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-sm",
+    style: item.done ? {
+      background: "#1a3a2a",
+      color: "#4ade80"
+    } : {
+      background: "#221c35",
+      color: "#6b5f8a"
+    }
+  }, item.done ? "✓" : "○"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => del(item.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-xs",
+    style: {
+      background: "#2d1520",
+      color: "#f87171"
+    }
+  }, "\u2715")))))), modal && /*#__PURE__*/React.createElement(AddModal, {
+    title: sub === "activites" ? "Nouvelle activité 🎯" : "Nouveau voyage ✈️",
+    fields: [{
+      key: "title",
+      label: "Titre",
+      placeholder: "",
+      required: true
+    }, {
+      key: "desc",
+      label: "Description",
+      placeholder: "",
+      type: "textarea"
+    }, {
+      key: "date",
+      label: "Date prévue",
+      type: "date"
+    }],
+    onClose: () => setModal(false),
+    onSave: add
+  }));
 }
-
-function FilmsTab({ data, setData, currentUser }) {
+function FilmsTab({
+  data,
+  setData,
+  currentUser
+}) {
   const [modal, setModal] = useState(false);
   const [filter, setFilter] = useState("all");
   const films = data.films;
-
-  const add = (form) => {
-    setData({ ...data, films: [{ id: Date.now(), title: form.title, desc: form.desc || "", genre: form.genre || "", by: currentUser, watched: false }, ...films] });
+  const add = form => {
+    setData({
+      ...data,
+      films: [{
+        id: Date.now(),
+        title: form.title,
+        desc: form.desc || "",
+        genre: form.genre || "",
+        by: currentUser,
+        watched: false
+      }, ...films]
+    });
   };
-  const toggleWatch = (id) => setData({ ...data, films: films.map(f => f.id === id ? {...f, watched: !f.watched} : f) });
-  const del = (id) => setData({ ...data, films: films.filter(f => f.id !== id) });
-
+  const toggleWatch = id => setData({
+    ...data,
+    films: films.map(f => f.id === id ? {
+      ...f,
+      watched: !f.watched
+    } : f)
+  });
+  const del = id => setData({
+    ...data,
+    films: films.filter(f => f.id !== id)
+  });
   const filtered = filter === "all" ? films : filter === "watched" ? films.filter(f => f.watched) : films.filter(f => !f.watched);
-
-  return (
-    <div className="pb-24">
-      <div className="gradient-bg p-6">
-        <h2 className="text-white font-bold text-xl mb-1">Films 🎬</h2>
-        <p className="text-sm" style={{color:"rgba(255,255,255,0.75)"}}>{films.filter(f=>!f.watched).length} film{films.filter(f=>!f.watched).length>1?"s":""} à voir</p>
-      </div>
-      <div className="p-4">
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-          {[["all","Tous"],["unwatched","À voir"],["watched","Vus ✓"]].map(([val,lbl]) => (
-            <button key={val} onClick={() => setFilter(val)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter===val ? "gradient-bg text-white" : "filter-btn"}`}>{lbl}</button>
-          ))}
-        </div>
-        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
-          <span className="text-xl">+</span> Ajouter un film
-        </button>
-        {filtered.length === 0
-          ? <EmptyState emoji="🎬" text="Aucun film ici !" />
-          : filtered.map(film => (
-            <div key={film.id} className="card p-4 mb-3" style={film.watched ? {opacity:0.5} : {}}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`font-semibold ${film.watched ? "line-through" : ""}`} style={{color: film.watched ? "#6b5f8a" : "#f0eefa"}}>{film.title}</span>
-                    <UserBadge userId={film.by} />
-                  </div>
-                  {film.genre && <span className="inline-block text-xs px-2 py-0.5 rounded-full mb-1" style={{background:"#2d1a40", color:"#d8b4fe"}}>{film.genre}</span>}
-                  {film.desc && <p className="text-sm" style={{color:"#9791b0"}}>{film.desc}</p>}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <button onClick={() => toggleWatch(film.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                    style={film.watched ? {background:"#1a3a2a", color:"#4ade80"} : {background:"#221c35", color:"#6b5f8a"}}>{film.watched ? "✓" : "○"}</button>
-                  <button onClick={() => del(film.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
-                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
-                </div>
-              </div>
-            </div>
-          ))
-        }
-      </div>
-      {modal && <AddModal title="Nouveau film 🎬" fields={[
-        {key:"title", label:"Titre du film", placeholder:"", required:true},
-        {key:"genre", label:"Genre", placeholder:""},
-        {key:"desc", label:"Note", placeholder:"", type:"textarea"},
-      ]} onClose={() => setModal(false)} onSave={add} />}
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pb-24"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "gradient-bg p-6"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-white font-bold text-xl mb-1"
+  }, "Films \uD83C\uDFAC"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm",
+    style: {
+      color: "rgba(255,255,255,0.75)"
+    }
+  }, films.filter(f => !f.watched).length, " film", films.filter(f => !f.watched).length > 1 ? "s" : "", " \xE0 voir")), /*#__PURE__*/React.createElement("div", {
+    className: "p-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 mb-4 overflow-x-auto pb-1"
+  }, [["all", "Tous"], ["unwatched", "À voir"], ["watched", "Vus ✓"]].map(([val, lbl]) => /*#__PURE__*/React.createElement("button", {
+    key: val,
+    onClick: () => setFilter(val),
+    className: `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter === val ? "gradient-bg text-white" : "filter-btn"}`
+  }, lbl))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal(true),
+    className: "w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, "+"), " Ajouter un film"), filtered.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+    emoji: "\uD83C\uDFAC",
+    text: "Aucun film ici !"
+  }) : filtered.map(film => /*#__PURE__*/React.createElement("div", {
+    key: film.id,
+    className: "card p-4 mb-3",
+    style: film.watched ? {
+      opacity: 0.5
+    } : {}
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 mb-1 flex-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `font-semibold ${film.watched ? "line-through" : ""}`,
+    style: {
+      color: film.watched ? "#6b5f8a" : "#f0eefa"
+    }
+  }, film.title), /*#__PURE__*/React.createElement(UserBadge, {
+    userId: film.by
+  })), film.genre && /*#__PURE__*/React.createElement("span", {
+    className: "inline-block text-xs px-2 py-0.5 rounded-full mb-1",
+    style: {
+      background: "#2d1a40",
+      color: "#d8b4fe"
+    }
+  }, film.genre), film.desc && /*#__PURE__*/React.createElement("p", {
+    className: "text-sm",
+    style: {
+      color: "#9791b0"
+    }
+  }, film.desc)), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col gap-1"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => toggleWatch(film.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-sm",
+    style: film.watched ? {
+      background: "#1a3a2a",
+      color: "#4ade80"
+    } : {
+      background: "#221c35",
+      color: "#6b5f8a"
+    }
+  }, film.watched ? "✓" : "○"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => del(film.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-xs",
+    style: {
+      background: "#2d1520",
+      color: "#f87171"
+    }
+  }, "\u2715")))))), modal && /*#__PURE__*/React.createElement(AddModal, {
+    title: "Nouveau film \uD83C\uDFAC",
+    fields: [{
+      key: "title",
+      label: "Titre du film",
+      placeholder: "",
+      required: true
+    }, {
+      key: "genre",
+      label: "Genre",
+      placeholder: ""
+    }, {
+      key: "desc",
+      label: "Note",
+      placeholder: "",
+      type: "textarea"
+    }],
+    onClose: () => setModal(false),
+    onSave: add
+  }));
 }
-
-function MusiqueTab({ data, setData, currentUser }) {
+function MusiqueTab({
+  data,
+  setData,
+  currentUser
+}) {
   const [modal, setModal] = useState(false);
   const musiques = data.musique;
-
-  const add = (form) => {
-    setData({ ...data, musique: [{ id: Date.now(), title: form.title, artist: form.artist || "", mood: form.mood || "", by: currentUser, liked: false }, ...musiques] });
+  const add = form => {
+    setData({
+      ...data,
+      musique: [{
+        id: Date.now(),
+        title: form.title,
+        artist: form.artist || "",
+        mood: form.mood || "",
+        by: currentUser,
+        liked: false
+      }, ...musiques]
+    });
   };
-  const toggleLike = (id) => setData({ ...data, musique: musiques.map(m => m.id === id ? {...m, liked: !m.liked} : m) });
-  const del = (id) => setData({ ...data, musique: musiques.filter(m => m.id !== id) });
-
-  return (
-    <div className="pb-24">
-      <div className="gradient-bg p-6">
-        <h2 className="text-white font-bold text-xl mb-1">Musique 🎵</h2>
-        <p className="text-sm" style={{color:"rgba(255,255,255,0.75)"}}>{musiques.length} morceau{musiques.length>1?"x":""}</p>
-      </div>
-      <div className="p-4">
-        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
-          <span className="text-xl">+</span> Ajouter un morceau
-        </button>
-        {musiques.length === 0
-          ? <EmptyState emoji="🎵" text="La liste est vide !" />
-          : musiques.map(m => (
-            <div key={m.id} className="card p-4 mb-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="font-semibold" style={{color:"#f0eefa"}}>{m.title}</span>
-                    <UserBadge userId={m.by} />
-                  </div>
-                  {m.artist && <p className="text-sm" style={{color:"#9791b0"}}>🎤 {m.artist}</p>}
-                  {m.mood && <p className="text-xs mt-1" style={{color:"#c084fc"}}>{m.mood}</p>}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <button onClick={() => toggleLike(m.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-base"
-                    style={m.liked ? {background:"#3d1830"} : {background:"#221c35"}}>{m.liked ? "❤️" : "🤍"}</button>
-                  <button onClick={() => del(m.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
-                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
-                </div>
-              </div>
-            </div>
-          ))
-        }
-      </div>
-      {modal && <AddModal title="Nouveau morceau 🎵" fields={[
-        {key:"title", label:"Titre", placeholder:"", required:true},
-        {key:"artist", label:"Artiste", placeholder:""},
-        {key:"mood", label:"Ambiance", placeholder:""},
-      ]} onClose={() => setModal(false)} onSave={add} />}
-    </div>
-  );
+  const toggleLike = id => setData({
+    ...data,
+    musique: musiques.map(m => m.id === id ? {
+      ...m,
+      liked: !m.liked
+    } : m)
+  });
+  const del = id => setData({
+    ...data,
+    musique: musiques.filter(m => m.id !== id)
+  });
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pb-24"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "gradient-bg p-6"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-white font-bold text-xl mb-1"
+  }, "Musique \uD83C\uDFB5"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm",
+    style: {
+      color: "rgba(255,255,255,0.75)"
+    }
+  }, musiques.length, " morceau", musiques.length > 1 ? "x" : "")), /*#__PURE__*/React.createElement("div", {
+    className: "p-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal(true),
+    className: "w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, "+"), " Ajouter un morceau"), musiques.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+    emoji: "\uD83C\uDFB5",
+    text: "La liste est vide !"
+  }) : musiques.map(m => /*#__PURE__*/React.createElement("div", {
+    key: m.id,
+    className: "card p-4 mb-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 mb-1 flex-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-semibold",
+    style: {
+      color: "#f0eefa"
+    }
+  }, m.title), /*#__PURE__*/React.createElement(UserBadge, {
+    userId: m.by
+  })), m.artist && /*#__PURE__*/React.createElement("p", {
+    className: "text-sm",
+    style: {
+      color: "#9791b0"
+    }
+  }, "\uD83C\uDFA4 ", m.artist), m.mood && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs mt-1",
+    style: {
+      color: "#c084fc"
+    }
+  }, m.mood)), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col gap-1"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => toggleLike(m.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-base",
+    style: m.liked ? {
+      background: "#3d1830"
+    } : {
+      background: "#221c35"
+    }
+  }, m.liked ? "❤️" : "🤍"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => del(m.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-xs",
+    style: {
+      background: "#2d1520",
+      color: "#f87171"
+    }
+  }, "\u2715")))))), modal && /*#__PURE__*/React.createElement(AddModal, {
+    title: "Nouveau morceau \uD83C\uDFB5",
+    fields: [{
+      key: "title",
+      label: "Titre",
+      placeholder: "",
+      required: true
+    }, {
+      key: "artist",
+      label: "Artiste",
+      placeholder: ""
+    }, {
+      key: "mood",
+      label: "Ambiance",
+      placeholder: ""
+    }],
+    onClose: () => setModal(false),
+    onSave: add
+  }));
 }
-
-function JeuxTab({ data, setData, currentUser }) {
+function JeuxTab({
+  data,
+  setData,
+  currentUser
+}) {
   const [modal, setModal] = useState(false);
   const [filter, setFilter] = useState("all");
   const jeux = data.jeux || [];
-
-  const add = (form) => {
-    setData({ ...data, jeux: [{ id: Date.now(), title: form.title, type: form.type || "", desc: form.desc || "", by: currentUser, played: false }, ...jeux] });
+  const add = form => {
+    setData({
+      ...data,
+      jeux: [{
+        id: Date.now(),
+        title: form.title,
+        type: form.type || "",
+        desc: form.desc || "",
+        by: currentUser,
+        played: false
+      }, ...jeux]
+    });
   };
-  const togglePlayed = (id) => setData({ ...data, jeux: jeux.map(j => j.id === id ? {...j, played: !j.played} : j) });
-  const del = (id) => setData({ ...data, jeux: jeux.filter(j => j.id !== id) });
-
+  const togglePlayed = id => setData({
+    ...data,
+    jeux: jeux.map(j => j.id === id ? {
+      ...j,
+      played: !j.played
+    } : j)
+  });
+  const del = id => setData({
+    ...data,
+    jeux: jeux.filter(j => j.id !== id)
+  });
   const filtered = filter === "all" ? jeux : filter === "played" ? jeux.filter(j => j.played) : jeux.filter(j => !j.played);
-
-  return (
-    <div className="pb-24">
-      <div className="gradient-bg p-6">
-        <h2 className="text-white font-bold text-xl mb-1">Jeux 🎮</h2>
-        <p className="text-sm" style={{color:"rgba(255,255,255,0.75)"}}>{jeux.filter(j=>!j.played).length} jeu{jeux.filter(j=>!j.played).length>1?"x":""} à faire</p>
-      </div>
-      <div className="p-4">
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-          {[["all","Tous"],["unplayed","À faire"],["played","Faits ✓"]].map(([val,lbl]) => (
-            <button key={val} onClick={() => setFilter(val)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter===val ? "gradient-bg text-white" : "filter-btn"}`}>{lbl}</button>
-          ))}
-        </div>
-        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
-          <span className="text-xl">+</span> Ajouter un jeu
-        </button>
-        {filtered.length === 0
-          ? <EmptyState emoji="🎮" text="Aucun jeu ici !" />
-          : filtered.map(jeu => (
-            <div key={jeu.id} className="card p-4 mb-3" style={jeu.played ? {opacity:0.5} : {}}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`font-semibold ${jeu.played ? "line-through" : ""}`} style={{color: jeu.played ? "#6b5f8a" : "#f0eefa"}}>{jeu.title}</span>
-                    <UserBadge userId={jeu.by} />
-                  </div>
-                  {jeu.type && <span className="inline-block text-xs px-2 py-0.5 rounded-full mb-1" style={{background:"#1a3a2a", color:"#4ade80"}}>{jeu.type}</span>}
-                  {jeu.desc && <p className="text-sm" style={{color:"#9791b0"}}>{jeu.desc}</p>}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <button onClick={() => togglePlayed(jeu.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                    style={jeu.played ? {background:"#1a3a2a", color:"#4ade80"} : {background:"#221c35", color:"#6b5f8a"}}>{jeu.played ? "✓" : "○"}</button>
-                  <button onClick={() => del(jeu.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
-                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
-                </div>
-              </div>
-            </div>
-          ))
-        }
-      </div>
-      {modal && <AddModal title="Nouveau jeu 🎮" fields={[
-        {key:"title", label:"Nom du jeu", placeholder:"", required:true},
-        {key:"type", label:"Type", placeholder:""},
-        {key:"desc", label:"Note", placeholder:"", type:"textarea"},
-      ]} onClose={() => setModal(false)} onSave={add} />}
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pb-24"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "gradient-bg p-6"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-white font-bold text-xl mb-1"
+  }, "Jeux \uD83C\uDFAE"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm",
+    style: {
+      color: "rgba(255,255,255,0.75)"
+    }
+  }, jeux.filter(j => !j.played).length, " jeu", jeux.filter(j => !j.played).length > 1 ? "x" : "", " \xE0 faire")), /*#__PURE__*/React.createElement("div", {
+    className: "p-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 mb-4 overflow-x-auto pb-1"
+  }, [["all", "Tous"], ["unplayed", "À faire"], ["played", "Faits ✓"]].map(([val, lbl]) => /*#__PURE__*/React.createElement("button", {
+    key: val,
+    onClick: () => setFilter(val),
+    className: `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter === val ? "gradient-bg text-white" : "filter-btn"}`
+  }, lbl))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal(true),
+    className: "w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, "+"), " Ajouter un jeu"), filtered.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+    emoji: "\uD83C\uDFAE",
+    text: "Aucun jeu ici !"
+  }) : filtered.map(jeu => /*#__PURE__*/React.createElement("div", {
+    key: jeu.id,
+    className: "card p-4 mb-3",
+    style: jeu.played ? {
+      opacity: 0.5
+    } : {}
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 mb-1 flex-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `font-semibold ${jeu.played ? "line-through" : ""}`,
+    style: {
+      color: jeu.played ? "#6b5f8a" : "#f0eefa"
+    }
+  }, jeu.title), /*#__PURE__*/React.createElement(UserBadge, {
+    userId: jeu.by
+  })), jeu.type && /*#__PURE__*/React.createElement("span", {
+    className: "inline-block text-xs px-2 py-0.5 rounded-full mb-1",
+    style: {
+      background: "#1a3a2a",
+      color: "#4ade80"
+    }
+  }, jeu.type), jeu.desc && /*#__PURE__*/React.createElement("p", {
+    className: "text-sm",
+    style: {
+      color: "#9791b0"
+    }
+  }, jeu.desc)), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col gap-1"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => togglePlayed(jeu.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-sm",
+    style: jeu.played ? {
+      background: "#1a3a2a",
+      color: "#4ade80"
+    } : {
+      background: "#221c35",
+      color: "#6b5f8a"
+    }
+  }, jeu.played ? "✓" : "○"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => del(jeu.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-xs",
+    style: {
+      background: "#2d1520",
+      color: "#f87171"
+    }
+  }, "\u2715")))))), modal && /*#__PURE__*/React.createElement(AddModal, {
+    title: "Nouveau jeu \uD83C\uDFAE",
+    fields: [{
+      key: "title",
+      label: "Nom du jeu",
+      placeholder: "",
+      required: true
+    }, {
+      key: "type",
+      label: "Type",
+      placeholder: ""
+    }, {
+      key: "desc",
+      label: "Note",
+      placeholder: "",
+      type: "textarea"
+    }],
+    onClose: () => setModal(false),
+    onSave: add
+  }));
 }
-
-function IdeesTab({ data, setData, currentUser }) {
+function IdeesTab({
+  data,
+  setData,
+  currentUser
+}) {
   const [modal, setModal] = React.useState(false);
   const [filter, setFilter] = React.useState("all");
   const idees = data.idees || [];
-  const add = (form) => { setData({ ...data, idees: [{ id: Date.now(), title: form.title, desc: form.desc || "", by: currentUser, done: false }, ...idees] }); };
-  const toggleDone = (id) => setData({ ...data, idees: idees.map(i => i.id === id ? {...i, done: !i.done} : i) });
-  const del = (id) => setData({ ...data, idees: idees.filter(i => i.id !== id) });
+  const add = form => {
+    setData({
+      ...data,
+      idees: [{
+        id: Date.now(),
+        title: form.title,
+        desc: form.desc || "",
+        by: currentUser,
+        done: false
+      }, ...idees]
+    });
+  };
+  const toggleDone = id => setData({
+    ...data,
+    idees: idees.map(i => i.id === id ? {
+      ...i,
+      done: !i.done
+    } : i)
+  });
+  const del = id => setData({
+    ...data,
+    idees: idees.filter(i => i.id !== id)
+  });
   const filtered = filter === "all" ? idees : filter === "done" ? idees.filter(i => i.done) : idees.filter(i => !i.done);
-  return (
-    <div className="px-4 pt-4 pb-32">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold">Idées ⭐</h2>
-        <button onClick={() => setModal(true)} className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold text-white gradient-bg">
-          <span className="text-xl">+</span> Ajouter
-        </button>
-      </div>
-      <div className="flex gap-2 mb-4">
-        {[["all","Toutes"],["todo","À faire"],["done","Réalisées ✓"]].map(([v,l]) => (
-          <button key={v} onClick={() => setFilter(v)} className={`filter-btn px-3 py-1 rounded-full text-xs font-medium ${filter===v?"active":""}`}>{l}</button>
-        ))}
-      </div>
-      <div>
-        {filtered.length === 0 ? <EmptyState emoji="⭐" text="pas d'idée" /> : filtered.map(idee => (
-          <div key={idee.id} className="card p-4 mb-3" style={idee.done ? {opacity:0.45} : {}}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className={`font-semibold ${idee.done?"line-through":""}`} style={{color:idee.done?"#6b5f8a":"#f0eefa"}}>{idee.title}</span>
-                  <UserBadge userId={idee.by} />
-                </div>
-                {idee.desc && <p className="text-sm" style={{color:"#9791b0"}}>{idee.desc}</p>}
-              </div>
-              <div className="flex flex-col gap-1">
-                <button onClick={() => toggleDone(idee.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                  style={idee.done?{background:"#1a3a2a",color:"#4ade80"}:{background:"#221c35",color:"#6b5f8a"}}>{idee.done?"✓":"○"}</button>
-                <button onClick={() => del(idee.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
-                  style={{background:"#2d1520",color:"#f87171"}}>✕</button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {modal && <AddModal title="Nouvelle idée ⭐" fields={[
-        {key:"title", label:"Idée", placeholder:"", required:true},
-        {key:"desc", label:"Description", placeholder:"", type:"textarea"},
-      ]} onClose={() => setModal(false)} onSave={add} />}
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "px-4 pt-4 pb-32"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-4"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-lg font-bold"
+  }, "Id\xE9es \u2B50"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal(true),
+    className: "flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold text-white gradient-bg"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, "+"), " Ajouter")), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 mb-4"
+  }, [["all", "Toutes"], ["todo", "À faire"], ["done", "Réalisées ✓"]].map(([v, l]) => /*#__PURE__*/React.createElement("button", {
+    key: v,
+    onClick: () => setFilter(v),
+    className: `filter-btn px-3 py-1 rounded-full text-xs font-medium ${filter === v ? "active" : ""}`
+  }, l))), /*#__PURE__*/React.createElement("div", null, filtered.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+    emoji: "\u2B50",
+    text: "pas d'id\xE9e"
+  }) : filtered.map(idee => /*#__PURE__*/React.createElement("div", {
+    key: idee.id,
+    className: "card p-4 mb-3",
+    style: idee.done ? {
+      opacity: 0.45
+    } : {}
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 mb-1 flex-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `font-semibold ${idee.done ? "line-through" : ""}`,
+    style: {
+      color: idee.done ? "#6b5f8a" : "#f0eefa"
+    }
+  }, idee.title), /*#__PURE__*/React.createElement(UserBadge, {
+    userId: idee.by
+  })), idee.desc && /*#__PURE__*/React.createElement("p", {
+    className: "text-sm",
+    style: {
+      color: "#9791b0"
+    }
+  }, idee.desc)), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col gap-1"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => toggleDone(idee.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-sm",
+    style: idee.done ? {
+      background: "#1a3a2a",
+      color: "#4ade80"
+    } : {
+      background: "#221c35",
+      color: "#6b5f8a"
+    }
+  }, idee.done ? "✓" : "○"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => del(idee.id),
+    className: "w-8 h-8 rounded-full flex items-center justify-center text-xs",
+    style: {
+      background: "#2d1520",
+      color: "#f87171"
+    }
+  }, "\u2715")))))), modal && /*#__PURE__*/React.createElement(AddModal, {
+    title: "Nouvelle id\xE9e \u2B50",
+    fields: [{
+      key: "title",
+      label: "Idée",
+      placeholder: "",
+      required: true
+    }, {
+      key: "desc",
+      label: "Description",
+      placeholder: "",
+      type: "textarea"
+    }],
+    onClose: () => setModal(false),
+    onSave: add
+  }));
 }
-
 function App() {
   const [currentUser, setCurrentUser] = useStorage("nd_user", "lea");
   const [activeTab, setActiveTab] = useState("activites");
   const [data, setData] = useStorage("nd_data", defaultData);
-
   useEffect(() => {
     document.body.classList.toggle('teal', currentUser === 'isuka');
   }, [currentUser]);
-
   const activeColor = currentUser === 'isuka' ? '#0a5c4e' : '#be185d';
-
-  return (
-    <div className="max-w-md mx-auto min-h-screen">
-      {/* Header */}
-      <div className="gradient-bg px-4 pt-4 pb-2 flex items-center justify-between sticky top-0 z-50">
-        <div>
-          <h1 className="text-white font-bold text-lg leading-tight">Planio</h1>
-          <p className="text-xs" style={{color:"rgba(255,255,255,0.7)"}}>liste partagée</p>
-        </div>
-        <div className="flex rounded-full p-1 gap-1" style={{background:"rgba(0,0,0,0.2)"}}>
-          {Object.entries(USERS).map(([id, u]) => (
-            <button key={id} onClick={() => setCurrentUser(id)}
-              className="px-3 py-1 rounded-full text-sm font-medium transition-all"
-              style={currentUser===id ? {background:"white", color:activeColor} : {color:"white"}}>
-              {u.emoji}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div>
-        {activeTab === "activites" && <ActivitesTab data={data} setData={setData} currentUser={currentUser} />}
-        {activeTab === "idees" && <IdeesTab data={data} setData={setData} currentUser={currentUser} />}
-        {activeTab === "jeux" && <JeuxTab data={data} setData={setData} currentUser={currentUser} />}
-        {activeTab === "films" && <FilmsTab data={data} setData={setData} currentUser={currentUser} />}
-        {activeTab === "musique" && <MusiqueTab data={data} setData={setData} currentUser={currentUser} />}
-      </div>
-
-      {/* Bottom Nav */}
-      <div className="bottom-nav">
-        <div className="flex">
-          {TABS.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 flex flex-col items-center py-2 tab-btn ${activeTab===tab.id ? "active" : ""}`}>
-              <span className="text-xl">{tab.emoji}</span>
-              <span className="text-xs mt-0.5 font-medium">{tab.label}</span>
-              {activeTab === tab.id && <span className="w-1 h-1 rounded-full mt-0.5" style={{background:"#f472b6"}}></span>}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "max-w-md mx-auto min-h-screen"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "gradient-bg px-4 pt-4 pb-2 flex items-center justify-between sticky top-0 z-50"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
+    className: "text-white font-bold text-lg leading-tight"
+  }, "Planio"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs",
+    style: {
+      color: "rgba(255,255,255,0.7)"
+    }
+  }, "liste partag\xE9e")), /*#__PURE__*/React.createElement("div", {
+    className: "flex rounded-full p-1 gap-1",
+    style: {
+      background: "rgba(0,0,0,0.2)"
+    }
+  }, Object.entries(USERS).map(([id, u]) => /*#__PURE__*/React.createElement("button", {
+    key: id,
+    onClick: () => setCurrentUser(id),
+    className: "px-3 py-1 rounded-full text-sm font-medium transition-all",
+    style: currentUser === id ? {
+      background: "white",
+      color: activeColor
+    } : {
+      color: "white"
+    }
+  }, u.emoji)))), /*#__PURE__*/React.createElement("div", null, activeTab === "activites" && /*#__PURE__*/React.createElement(ActivitesTab, {
+    data: data,
+    setData: setData,
+    currentUser: currentUser
+  }), activeTab === "idees" && /*#__PURE__*/React.createElement(IdeesTab, {
+    data: data,
+    setData: setData,
+    currentUser: currentUser
+  }), activeTab === "jeux" && /*#__PURE__*/React.createElement(JeuxTab, {
+    data: data,
+    setData: setData,
+    currentUser: currentUser
+  }), activeTab === "films" && /*#__PURE__*/React.createElement(FilmsTab, {
+    data: data,
+    setData: setData,
+    currentUser: currentUser
+  }), activeTab === "musique" && /*#__PURE__*/React.createElement(MusiqueTab, {
+    data: data,
+    setData: setData,
+    currentUser: currentUser
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "bottom-nav"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex"
+  }, TABS.map(tab => /*#__PURE__*/React.createElement("button", {
+    key: tab.id,
+    onClick: () => setActiveTab(tab.id),
+    className: `flex-1 flex flex-col items-center py-2 tab-btn ${activeTab === tab.id ? "active" : ""}`
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, tab.emoji), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs mt-0.5 font-medium"
+  }, tab.label), activeTab === tab.id && /*#__PURE__*/React.createElement("span", {
+    className: "w-1 h-1 rounded-full mt-0.5",
+    style: {
+      background: "#f472b6"
+    }
+  }))))));
 }
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 </script>
 <script>
 if ('serviceWorker' in navigator) {
